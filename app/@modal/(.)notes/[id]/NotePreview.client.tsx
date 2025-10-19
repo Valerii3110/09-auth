@@ -33,7 +33,7 @@ const NotePreview = () => {
     : `Created at: ${note.createdAt}`;
 
   return (
-    <Modal onClose={close} notes={[]}>
+    <Modal onClose={close}>
       <button onClick={close} className={css.backBtn} type="button">
         Go Back
       </button>

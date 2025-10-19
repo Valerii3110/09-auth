@@ -1,46 +1,45 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+
 import { fetchNoteById } from '@/lib/api/clientApi';
+
+import Loader from '@/app/loading';
+
 import css from './NoteDetails.module.css';
 
-interface NoteDetailsClientProps {
-  id: string;
-}
+const NoteDetailsClient = () => {
+  const { id } = useParams<{ id: string }>();
 
-export default function NoteDetailsClient({ id }: NoteDetailsClientProps) {
-  const router = useRouter();
   const {
     data: note,
     isLoading,
-    isError,
+    error,
   } = useQuery({
     queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
     refetchOnMount: false,
   });
 
-  const handleBack = () => {
-    router.back(); // Повертає на попередню сторінку в історії браузера
-  };
+  if (isLoading) return <Loader />;
 
-  if (isLoading) return <p>Loading, please wait...</p>;
-  if (isError || !note) return <p>Something went wrong.</p>;
+  if (error || !note) return <p>Something went wrong.</p>;
+
+  const formattedDate = note.updatedAt
+    ? `Updated at: ${note.updatedAt}`
+    : `Created at: ${note.createdAt}`;
 
   return (
     <div className={css.container}>
-      <button onClick={handleBack} className={css.backButton}>
-        ← Back
-      </button>
       <div className={css.item}>
         <div className={css.header}>
           <h2>{note.title}</h2>
-          <span className={css.tag}>{note.tag}</span>
         </div>
         <p className={css.content}>{note.content}</p>
-        <p className={css.date}>Created: {new Date(note.createdAt).toLocaleDateString()}</p>
+        <p className={css.date}>{formattedDate}</p>
       </div>
     </div>
   );
-}
+};
+export default NoteDetailsClient;

@@ -7,8 +7,6 @@ import Link from 'next/link';
 
 interface NoteListProps {
   notes: Note[];
-  onClose?: () => void;
-  children?: React.ReactNode;
 }
 
 export default function NoteList({ notes }: NoteListProps) {
