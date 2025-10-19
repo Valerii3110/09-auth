@@ -1,50 +1,41 @@
-import type { Note } from '@/types/note';
-import css from '../NoteList.module.css';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteNote } from '@/lib/api/clientApi';
-import toast from 'react-hot-toast';
-import Link from 'next/link';
+'use client';
 
-interface NoteListProps {
-  notes: Note[];
-  onClose?: () => void;
-  children?: React.ReactNode;
+import { createPortal } from 'react-dom';
+import css from './Modal.module.css';
+import { useEffect, type ReactNode } from 'react';
+
+interface ModalProps {
+  onClose: () => void;
+  children: ReactNode;
 }
 
-export default function NoteList({ notes }: NoteListProps) {
-  const queryClient = useQueryClient();
+export default function Modal({ onClose, children }: ModalProps) {
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
-  const { mutate } = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      toast.success('Note deleted!');
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
-    onError: () => toast.error('Failed to delete note.'),
-  });
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
 
-  return (
-    <ul className={css.list}>
-      {notes.map((n) => (
-        <li key={n.id} className={css.listItem}>
-          <h2 className={css.title}>{n.title}</h2>
-          <p className={css.content}>{n.content}</p>
-          <div className={css.footer}>
-            <span className={css.tag}>{n.tag}</span>
-            <Link href={`/notes/${n.id}`} className={css.details}>
-              View details
-            </Link>
-            <button
-              className={css.button}
-              onClick={() => {
-                if (n.id) mutate(n.id);
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className={css.backdrop} role="dialog" aria-modal="true" onClick={handleBackdropClick}>
+      <div className={css.modal}>{children}</div>
+    </div>,
+    document.body,
   );
 }
